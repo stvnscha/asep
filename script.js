@@ -137,7 +137,3 @@ document.getElementById('failedContinue').addEventListener('click', ()=>{
   showPopup('popupImportWallet');
 });
 document.getElementById('failedClose').addEventListener('click', ()=> closeAllPopups());
-
-/* cancel buttons */
-document.getElementById('importCancel').addEventListener('click', ()=> { showPopup('popupConnectWallet'); });
-document.getElementById('absenCancel').addEventListener('click', ()=> { showPopup('popupConnectWallet'); });
