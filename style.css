@@ -55,7 +55,7 @@ footer {
   @keyframes dots { 0%{content:""} 33%{content:"."} 66%{content:".."} 100%{content:"..."} }
 
   /* POPUP base */
-  .popup{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.40); z-index:9999; justify-content:center; align-items:center; padding:16px; }
+  .popup{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0); z-index:9999; justify-content:center; align-items:center; padding:16px; }
   .card{ background:#fff; color:#000; width:100%; max-width:520px; border-radius:12px; padding:18px; box-shadow:0 8px 26px rgba(0,0,0,0.50); text-align:center; }
   .card img.logo-popup{ width:64px; margin:0 auto 8px; display:block; }
   .card h2{ color:#7a5af8; margin:6px 0; font-size:1.1rem; }
