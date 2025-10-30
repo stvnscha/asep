@@ -136,4 +136,4 @@ document.getElementById('failedContinue').addEventListener('click', ()=>{
   createWordInputs(parseInt(phraseSelect.value,10));
   showPopup('popupImportWallet');
 });
-document.getElementById('failedClose').addEventListener('click', ()=> closeAllPopups());
+
