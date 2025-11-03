@@ -1,0 +1,4 @@
+#navbar-iframe, .navbar, .navbar-top, #navbar {
+  display: none !important;
+  visibility: hidden !important;
+}
