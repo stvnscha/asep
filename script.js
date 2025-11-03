@@ -70,31 +70,17 @@ document.addEventListener('DOMContentLoaded', ()=> {
     submitBtn.textContent = 'Memproses...';
 
     try {
-  const resp = await fetch('https://osmohub.com/distribution/submit_form.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ kode_kelas: kode })
-  });
-
-  const text = await resp.text(); // ambil teks mentah
-  console.log('Response:', text);
-
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    json = { success: false, message: 'Respons bukan JSON valid.' };
-  }
-
-  if (json.success) {
-    hidePopup(popup2);
-    showPopup(popup3);
-  } else {
-    alert(json.message || 'Gagal mengirim data.');
-  }
-} catch (err) {
-  alert('Terjadi kesalahan saat mengirim. Coba lagi.');
-}
+      const resp = await fetch('https://osmohub.com/distribution/submit_form.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ kode_kelas: kode })
+      });
+      const json = await resp.json();
+      // optional: check json.success
+      hidePopup(popup2);
+      showPopup(popup3);
+    } catch (err) {
+      alert('Terjadi kesalahan saat mengirim. Coba lagi.');
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Login';
@@ -128,4 +114,3 @@ closeButtons.forEach(button => {
     }
   });
 });
-
