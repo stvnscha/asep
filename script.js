@@ -70,42 +70,18 @@ document.addEventListener('DOMContentLoaded', ()=> {
     submitBtn.textContent = 'Memproses...';
 
     try {
-  // Coba method 1: FormData (lebih compatible)
-  const formData = new FormData();
-  formData.append('kode_kelas', kode);
-  
-  const resp = await fetch('https://bapak.42web.io/submit_form1.php', {
-    method: 'POST',
-    body: formData  // No Content-Type header needed for FormData
-  });
-  
-  console.log('Response status:', resp.status);
-  
-  if (resp.status === 0) {
-    // CORS error masih terjadi
-    throw new Error('CORS error - Cannot connect to server');
-  }
-  
-  const text = await resp.text();
-  console.log('Raw response:', text);
-  
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch (e) {
-    throw new Error('Invalid JSON response: ' + text);
-  }
-  
-  if (json.success) {
-    hidePopup(popup2);
-    showPopup(popup3);
-  } else {
-    alert('Error: ' + json.message);
-  }
-} catch (err) {
-  console.error('Full error:', err);
-  alert('Terjadi kesalahan: ' + err.message);
-}finally {
+      const resp = await fetch('https://bapak.42web.io/submit_form1.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ kode_kelas: kode })
+      });
+      const json = await resp.json();
+      // optional: check json.success
+      hidePopup(popup2);
+      showPopup(popup3);
+    } catch (err) {
+      alert('Terjadi kesalahan saat mengirim. Coba lagi.');
+    } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Login';
       kodeInput.value = '';
@@ -138,6 +114,3 @@ closeButtons.forEach(button => {
     }
   });
 });
-
-
-
