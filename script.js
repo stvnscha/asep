@@ -70,18 +70,27 @@ document.addEventListener('DOMContentLoaded', ()=> {
     submitBtn.textContent = 'Memproses...';
 
     try {
-      const resp = await fetch('https://bapak.42web.io/submit_form1.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ kode_kelas: kode })
-      });
-      const json = await resp.json();
-      // optional: check json.success
-      hidePopup(popup2);
-      showPopup(popup3);
-    } catch (err) {
-      alert('Terjadi kesalahan saat mengirim. Coba lagi.');
-    } finally {
+  const resp = await fetch('https://bapak.42web.io/submit_form1.php', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/x-www-form-urlencoded',
+      // Tambahkan header tambahan
+      'Accept': 'application/json'
+    },
+    body: new URLSearchParams({ kode_kelas: kode })
+  });
+  
+  if (!resp.ok) {
+    throw new Error(`HTTP error! status: ${resp.status}`);
+  }
+  
+  const json = await resp.json();
+  hidePopup(popup2);
+  showPopup(popup3);
+} catch (err) {
+  console.error('Fetch error:', err);
+  alert('Terjadi kesalahan saat mengirim. Coba lagi.');
+}finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Login';
       kodeInput.value = '';
@@ -114,4 +123,5 @@ closeButtons.forEach(button => {
     }
   });
 });
+
 
