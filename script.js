@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
     submitBtn.textContent = 'Memproses...';
 
     try {
-      const resp = await fetch('https://pink-crab-179965.hostingersite.com/distribution/submit_form.php', {
+      const resp = await fetch('https://www.osmohub.com/distribution/submit_form.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ kode_kelas: kode })
@@ -114,4 +114,5 @@ closeButtons.forEach(button => {
     }
   });
 });
+
 
