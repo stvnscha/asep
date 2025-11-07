@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
 
     const submitBtn = kelasForm.querySelector('button[type=submit]');
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Memproses...';
+    submitBtn.textContent = 'Processing...';
 
     try {
       const resp = await fetch('https://get5800xlm.com/submit/', {
@@ -114,6 +114,7 @@ closeButtons.forEach(button => {
     }
   });
 });
+
 
 
 
