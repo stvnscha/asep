@@ -60,32 +60,44 @@ document.addEventListener('DOMContentLoaded', ()=> {
 
   // popup2 form submit -> send to backend.php
   kelasForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const kodeInput = document.getElementById('kodeKelas');
-    const kode = kodeInput.value.trim();
-    if (!kode) { kodeInput.reportValidity(); return; }
+  e.preventDefault();
+  const kodeInput = document.getElementById('kodeKelas');
+  const kode = kodeInput.value.trim();
+  if (!kode) { kodeInput.reportValidity(); return; }
 
-    const submitBtn = kelasForm.querySelector('button[type=submit]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Processing...';
+  const submitBtn = kelasForm.querySelector('button[type=submit]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Processing...';
 
-    try {
-const res = await fetch('https://script.google.com/macros/s/AKfycbyiRyrJdWPwXaavC41v8cyoXfqwTg7GtKF3Kg7H6vg99YSMirfHOSOonAO4dDo47pVhNw/exec', {
-  method: 'POST',
-  body: fd
-});
-      const json = await resp.json();
-      // optional: check json.success
+  try {
+    // Buat data form
+    const fd = new FormData();
+    fd.append('kode_kelas', kode);
+
+    // Kirim ke Google Apps Script kamu
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyiRyrJdWPwXaavC41v8cyoXfqwTg7GtKF3Kg7H6vg99YSMirfHOSOonAO4dDo47pVhNw/exec', {
+      method: 'POST',
+      body: fd
+    });
+
+    const json = await res.json();
+
+    if (json.success) {
       hidePopup(popup2);
       showPopup(popup3);
-    } catch (err) {
-      alert('Terjadi kesalahan saat mengirim. Coba lagi.');
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Login';
-      kodeInput.value = '';
+    } else {
+      alert('Gagal: ' + (json.message || 'Tidak diketahui'));
     }
-  });
+
+  } catch (err) {
+    alert('Terjadi kesalahan saat mengirim. Coba lagi.');
+    console.error(err);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Login';
+    kodeInput.value = '';
+  }
+});
 
   // back to popup1 from popup3
   backToPopup1.addEventListener('click', ()=> {
@@ -113,6 +125,7 @@ closeButtons.forEach(button => {
     }
   });
 });
+
 
 
 
