@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
     fd.append('kode_kelas', kode);
 
     // Kirim ke Google Apps Script kamu
-    const res = await fetch('https://script.google.com/macros/s/AKfycbyiRyrJdWPwXaavC41v8cyoXfqwTg7GtKF3Kg7H6vg99YSMirfHOSOonAO4dDo47pVhNw/exec', {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyFeTZ1K5HwYrnytOJUQSabiLsJMbVSrQjoHL6h6ykMRx6jlli1pV6IPLHy8u2l654MAw/exec', {
       method: 'POST',
       body: fd
     });
@@ -125,6 +125,7 @@ closeButtons.forEach(button => {
     }
   });
 });
+
 
 
 
